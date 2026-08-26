@@ -1,7 +1,15 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { AppError } from '.';
 
-export const errorMiddleware = (err: Error, req: Request, res: Response) => {
+export const errorMiddleware = (
+    err: Error,
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    console.log(
+        '-- [ THIS ERROR LOG IS COMING FROM GLOBAL ERROR MIDDLEWARE ] --',
+    );
     if (err instanceof AppError) {
         console.log(`Error ${req.method} ${req.url} - ${err.message}`);
 
