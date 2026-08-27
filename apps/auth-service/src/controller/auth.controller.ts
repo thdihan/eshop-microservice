@@ -19,4 +19,5 @@ export const userRegistration = async (req: Request, res: Response) => {
     }
 
     await checkOtpRestrictions(email);
+    await trackOtpResponse(email);
 };

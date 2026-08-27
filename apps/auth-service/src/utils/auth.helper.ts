@@ -62,3 +62,19 @@ export const sendOtp = async (
     await redis.set(`otp:${email}`, otp, 'EX', 300);
     await redis.set(`otp_cooldown:${email}`, 'true', 'EX', 60);
 };
+
+export const trackOtpRequest = async (email: string) => {
+    const otpRequestKey = `otp_request_count:${email}`;
+
+    let otpRequest = parseInt((await redis.get(otpRequestKey)) || '0');
+
+    if (otpRequest >= 2) {
+        await redis.set(`otp_spam_lock:${email}`, 'locked', 'EX', '3600');
+
+        throw new ValidationError(
+            'Too many OTP requests. Please wait 1 hour before requesting again.',
+        );
+    }
+
+    await redis.set(otpRequestKey, otpRequest + 1, 'EX', '3600');
+};
