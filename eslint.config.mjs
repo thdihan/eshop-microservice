@@ -37,8 +37,6 @@ export default [
             '**/*.mjs',
         ],
         // Override or add rules here
-        rules: {
-            'no-unused-vars': 'false',
-        },
+        rules: {},
     },
 ];

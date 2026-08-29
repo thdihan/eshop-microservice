@@ -4,9 +4,6 @@
     "files": [],
     "references": [
         {
-            "path": "./apps/auth-service-e2e"
-        },
-        {
             "path": "./apps/auth-service"
         },
         {
@@ -14,6 +11,9 @@
         },
         {
             "path": "./apps/api-gateway"
+        },
+        {
+            "path": "./packages/error-handler"
         }
     ],
     "compilerOptions": {

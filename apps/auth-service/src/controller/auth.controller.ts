@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import {
     checkOtpRestrictions,
+    sendOtp,
+    trackOtpRequest,
     validateRegistrationData,
 } from '../utils/auth.helper';
 import prisma from '../../../../packages/lib/prisma';
@@ -18,6 +20,11 @@ export const userRegistration = async (req: Request, res: Response) => {
         throw new ValidationError('User already exists with this email!');
     }
 
-    await checkOtpRestrictions(email);
-    await trackOtpResponse(email);
+    // await checkOtpRestrictions(email);
+    // await trackOtpRequest(email);
+    await sendOtp(name, email, 'user-activation-mail');
+
+    res.status(200).json({
+        message: 'OTP sent to email, Please verify your email',
+    });
 };

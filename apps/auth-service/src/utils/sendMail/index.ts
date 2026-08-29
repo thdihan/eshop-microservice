@@ -8,7 +8,8 @@ dotenv.config();
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
-    service: process.env.SMTP_SERVICE,
+    secure: true,
+    family: 4,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -22,6 +23,7 @@ const renderEmailTemplate = async (
 ): Promise<string> => {
     const templatePath = path.join(
         process.cwd(),
+        'apps',
         'auth-service',
         'src',
         'utils',
@@ -50,7 +52,7 @@ export const sendMail = async (
 
         return true;
     } catch (error) {
-        console.log(`There is an issue sending email to ${to}`);
+        console.log(`There is an issue sending email to ${to} `, error);
         return false;
     }
 };

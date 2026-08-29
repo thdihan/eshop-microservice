@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { ValidationError } from '../../../../packages/error-handler';
+import { ValidationError } from '@packages/error-handler';
 import redis from '../../../../packages/lib/redis';
 import { sendMail } from './sendMail';
 
@@ -66,7 +66,7 @@ export const sendOtp = async (
 export const trackOtpRequest = async (email: string) => {
     const otpRequestKey = `otp_request_count:${email}`;
 
-    let otpRequest = parseInt((await redis.get(otpRequestKey)) || '0');
+    const otpRequest = parseInt((await redis.get(otpRequestKey)) || '0');
 
     if (otpRequest >= 2) {
         await redis.set(`otp_spam_lock:${email}`, 'locked', 'EX', '3600');
