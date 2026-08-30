@@ -2,19 +2,21 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import ejs from 'ejs';
 import path from 'path';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
+const options: SMTPTransport.Options = {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
     secure: true,
-    family: 4,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
-});
+};
+
+const transporter = nodemailer.createTransport(options);
 
 // Render ejs email template.
 const renderEmailTemplate = async (

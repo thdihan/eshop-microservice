@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { ValidationError } from '@packages/error-handler';
 import redis from '../../../../packages/lib/redis';
 import { sendMail } from './sendMail';
+import prisma from '../../../../packages/lib/prisma';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -77,4 +78,77 @@ export const trackOtpRequest = async (email: string) => {
     }
 
     await redis.set(otpRequestKey, otpRequest + 1, 'EX', '3600');
+};
+
+export const verifyForgotPasswordOtp = async (email: string, otp: string) => {
+    try {
+        if (!email || !otp) {
+            throw new ValidationError('Email and OTP are required');
+        }
+
+        await verifyOtp(email, otp);
+    } catch (error) {
+        throw new ValidationError("Couldn't verify");
+    }
+};
+
+export const verifyOtp = async (email: string, otp: string) => {
+    const storedOtp = await redis.get(`otp:${email}`);
+
+    console.log('OTP FOUND', storedOtp);
+    console.log('OTP SENT', otp);
+
+    if (!storedOtp) {
+        throw new ValidationError('Invalid or Expired OTP');
+    }
+
+    const failedAttemptsKey = `otp_attempts:${email}`;
+    const failedAttemps = parseInt((await redis.get(failedAttemptsKey)) || '0');
+
+    if (storedOtp !== otp) {
+        if (failedAttemps >= 2) {
+            await redis.set(`otp_lock:${email}`, 'locked', 'EX', 1800);
+            await redis.del(`otp:${email}`, failedAttemptsKey);
+
+            throw new ValidationError(
+                'Too many attempts. Your account is locked for 30 Minutes.',
+            );
+        }
+
+        await redis.set(failedAttemptsKey, failedAttemps + 1, 'EX', 300);
+
+        throw new ValidationError(
+            `Incorrect OTP. You have ${2 - failedAttemps} left`,
+        );
+    }
+
+    await redis.del(`otp:${email}`, failedAttemptsKey);
+};
+
+export const handleForgotPassword = async (
+    payload: any,
+    userType: 'user' | 'admin',
+) => {
+    const { name, email } = payload;
+    try {
+        if (!email) {
+            throw new ValidationError('Email is required');
+        }
+
+        const user =
+            userType === 'user' &&
+            (await prisma.users.findUnique({ where: { email } }));
+
+        if (!user) throw new ValidationError(`${userType} not found`);
+
+        // await checkOtpRestrictions(email);
+        // await trackOtpRequest(email);
+
+        await sendOtp(name, email, 'user-activation-mail');
+    } catch (error) {
+        throw new ValidationError(
+            'Something went wrong with sending email',
+            error,
+        );
+    }
 };
